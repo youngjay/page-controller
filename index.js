@@ -11,18 +11,22 @@ var parseFragment = function(str) {
     }
 };
 
-
-var PageController = mixin(
+module.exports = mixin(
     function(container, onChange) {
         this.container = container;
         this.onChange = onChange;
+        var self = this;
+        onChange(function(fragment) {
+            self.fragment = fragment;
+        })
     },
     {
         add: function(route, moduleFactory) {
             var container = this.container;
             var reg = pathToRegexp(route);
             var module;
-            this.onChange(function(fragment) {
+
+            var handler = function(fragment) {
                 var data = parseFragment(fragment);
                 var m = reg.exec(data.path);
                 if (m) {
@@ -42,9 +46,13 @@ var PageController = mixin(
                         module.__active(false)
                     }
                 }
-            });
+            };
+
+            this.onChange(handler);
+
+            if (this.fragment) {
+                handler(this.fragment);
+            }
         }
     }
 );
-
-module.exports = PageController;
