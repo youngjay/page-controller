@@ -1,0 +1,23 @@
+{
+  "name": "page-controller",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/youngjay/page-controller.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/youngjay/page-controller/issues"
+  },
+  "homepage": "https://github.com/youngjay/page-controller",
+  "dependencies": {
+    "mixin-class": "^1.0.3",
+    "knockout-commonjs": "0.0.1",
+    "path-to-regexp": "^0.1.2"
+  }
+}
