@@ -75,7 +75,7 @@ module.exports = mixin(
             var currentModule = new CurrentModuleFactory();
             
             currentModule.__active = ko.observable(true);
-            currentModule.__view = '<!-- ko if: __active -->' + currentModule.__view + '<!-- /ko -->';
+            currentModule.__view = '<div class="page page' + path.replace(this.pathPrefix, '').replace(/\//g, '-') + '" data-bind="visible: __active">' + currentModule.__view + '</div>';
 
             return currentModule;
         },
