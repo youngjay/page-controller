@@ -69,7 +69,14 @@ module.exports = mixin(
                 CurrentModuleFactory = require(path);
             }
             catch (e) {
-                CurrentModuleFactory = require(this.notFoundModulePath);
+                // not found
+                if (e.message.indexOf('\'' + path + '\'') !== -1) {
+                    CurrentModuleFactory = require(this.notFoundModulePath);
+                }
+                else {
+                    // pass other case
+                    throw e;
+                }
             }
 
             var currentModule = new CurrentModuleFactory();
