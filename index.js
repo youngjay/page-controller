@@ -21,7 +21,7 @@ module.exports = mixin(
 
         rootPath: '/root',
 
-        notFoundModulePath: 'module/page/not-found',
+        notFoundModulePath: '/not-found',
 
         update: function(fragment) {
             var data = parseFragment(fragment);
@@ -71,7 +71,7 @@ module.exports = mixin(
             catch (e) {
                 // not found
                 if (e.message.indexOf('\'' + path + '\'') !== -1) {
-                    CurrentModuleFactory = require(this.notFoundModulePath);
+                    CurrentModuleFactory = require(this.pathPrefix + this.notFoundModulePath);
                 }
                 else {
                     // pass other case
