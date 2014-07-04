@@ -14,22 +14,25 @@ module.exports = mixin(
     function() {
         this._modules = {};
         this._activeModules = {};
-        this._rootModule = new (require(this.pathPrefix + this.rootPath))();
+        this._rootModule = new (require(this.modulePathPrefix + this.moduleRootPath))();
     },
     {
-        pathPrefix: 'module/page',
-
-        rootPath: '/root',
-
-        notFoundModulePath: '/not-found',
+        modulePathPrefix: 'module/page',
+        moduleRootPath: '/root',
+        moduleNotFoundPath: '/not-found',
 
         update: function(fragment) {
             var data = parseFragment(fragment);
+
+            if (this.onDispatch(data)) {
+                return;
+            }
+
             var path = data.path;
             var query = data.query;
             var self = this;
 
-            var parentPath = this.pathPrefix;
+            var parentPath = this.modulePathPrefix;
             var parentModule = this._rootModule;
 
             path.split('/').forEach(function(subPath) {
@@ -71,7 +74,7 @@ module.exports = mixin(
             catch (e) {
                 // not found
                 if (e.message.indexOf('\'' + path + '\'') !== -1) {
-                    CurrentModuleFactory = require(this.pathPrefix + this.notFoundModulePath);
+                    CurrentModuleFactory = require(this.modulePathPrefix + this.moduleNotFoundPath);
                 }
                 else {
                     // pass other case
@@ -82,10 +85,29 @@ module.exports = mixin(
             var currentModule = new CurrentModuleFactory();
             
             currentModule.__active = ko.observable(true);
-            currentModule.__view = '<div class="page page' + path.replace(this.pathPrefix, '').replace(/\//g, '-') + '" data-bind="visible: __active">' + currentModule.__view + '</div>';
+            currentModule.__view = '<div class="page page' + path.replace(this.modulePathPrefix, '').replace(/\//g, '-') + '" data-bind="visible: __active">' + currentModule.__view + '</div>';
 
             return currentModule;
         },
+
+        // 重写此方法可以用作重定向，或者过滤父路径
+        // 返回true可以跳过之后的处理流程
+        onDispatch: function(data) {
+            return false;
+        },
+
+        // 例1：重定向
+        // onDispatch: function(data) {
+        //     if (data.path.indexOf('admin') === 0) {
+        //         history.navigate('login?from=admin', {replace: true});
+        //         return true;
+        //     }
+        // }
+
+        // 例2：过滤父路径
+        // onDispatch: function(data) {
+        //     data.path = data.path.replace('admin/', '');
+        // }
 
         render: function(el) {
             el.innerHTML = this._rootModule.__view;
