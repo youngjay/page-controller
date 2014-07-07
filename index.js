@@ -21,6 +21,9 @@ module.exports = mixin(
         moduleRootPath: '/root',
         moduleNotFoundPath: '/not-found',
 
+        MODULE_ACTIVE: '__active',
+        MODULE_VIEW: '__view',
+
         update: function(fragment) {
             var data = parseFragment(fragment);
 
@@ -40,18 +43,18 @@ module.exports = mixin(
 
                 var currentModule = self._modules[fullPath];
                 if (!currentModule) {
-                    currentModule = self._createModule(fullPath);                       
+                    currentModule = self.createModule(fullPath);                       
                     self._modules[fullPath] = currentModule;
-                    parentModule.add(currentModule);
+                    self.onAppendModuleToParent(parentModule, currentModule);
                 }
             
                 var lastActiveModule = self._activeModules[parentPath];
 
                 if (lastActiveModule !== currentModule) {
                     if (lastActiveModule) {
-                        lastActiveModule.__active(false);
+                        lastActiveModule[self.MODULE_ACTIVE](false);
                     }
-                    currentModule.__active(true);
+                    currentModule[self.MODULE_ACTIVE](true);
                     self._activeModules[parentPath] = currentModule;
                 }
 
@@ -65,7 +68,7 @@ module.exports = mixin(
             });
         },
 
-        _createModule: function(path) {
+        createModule: function(path) {
             var CurrentModuleFactory;
 
             try {
@@ -74,7 +77,7 @@ module.exports = mixin(
             catch (e) {
                 // not found
                 if (e.message.indexOf('\'' + path + '\'') !== -1) {
-                    CurrentModuleFactory = require(this.modulePathPrefix + this.moduleNotFoundPath);
+                    CurrentModuleFactory = this.onModuleMissing(path);
                 }
                 else {
                     // pass other case
@@ -82,12 +85,24 @@ module.exports = mixin(
                 }
             }
 
-            var currentModule = new CurrentModuleFactory();
-            
-            currentModule.__active = ko.observable(true);
-            currentModule.__view = '<div class="page page' + path.replace(this.modulePathPrefix, '').replace(/\//g, '-') + '" data-bind="visible: __active">' + currentModule.__view + '</div>';
+            var currentModule = new CurrentModuleFactory();    
+
+            currentModule[this.MODULE_ACTIVE] = ko.observable(true);
+            currentModule[this.MODULE_VIEW] = this.onBuildModuleVisibleView(currentModule[this.MODULE_VIEW]);
 
             return currentModule;
+        },
+
+        onBuildModuleVisibleView: function(str) {  
+            return '<div class="page" data-bind="visible: ' + this.MODULE_ACTIVE + '">' + str+ '</div>';
+        },
+
+        onModuleMissing: function(path) {
+            return require(this.modulePathPrefix + this.moduleNotFoundPath);
+        },
+
+        onAppendModuleToParent: function(parent, child) {
+            parent.add(child);
         },
 
         // 重写此方法可以用作重定向，或者过滤父路径
@@ -110,7 +125,7 @@ module.exports = mixin(
         // }
 
         render: function(el) {
-            el.innerHTML = this._rootModule.__view;
+            el.innerHTML = this._rootModule[this.MODULE_VIEW];
             ko.applyBindings(this._rootModule, el);
         }
     }
