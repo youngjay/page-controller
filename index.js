@@ -38,7 +38,11 @@ module.exports = mixin(
             var parentPath = this.modulePathPrefix;
             var parentModule = this._rootModule;
 
-            path.split('/').forEach(function(subPath) {
+            if (this._rootModule.update) {
+                this._rootModule.update(query, path);
+            }
+
+            path.split('/').filter(Boolean).forEach(function(subPath) {
                 var fullPath = parentPath + '/' + subPath;
 
                 var currentModule = self._modules[fullPath];
