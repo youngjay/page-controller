@@ -89,7 +89,7 @@ module.exports = mixin(
                 }
             }
 
-            var currentModule = new CurrentModuleFactory();    
+            var currentModule = typeof CurrentModuleFactory === 'function' ? new CurrentModuleFactory() : CurrentModuleFactory;    
 
             currentModule[this.MODULE_ACTIVE] = ko.observable(true);
             currentModule[this.MODULE_VIEW] = this.onBuildModuleVisibleView(currentModule[this.MODULE_VIEW]);
