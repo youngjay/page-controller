@@ -4,9 +4,14 @@ var ko = require('knockout');
 
 var parseFragment = function(str) {
     var parts = str.split('?');
+    var query = parts[1];
+    // remove hash
+    if (query) {
+        query = query.replace(/#.*/, '');
+    }    
     return {
         path: parts[0],
-        query: parts[1] ? queryString.parse(parts[1]) : {}
+        query: query ? queryString.parse(query) : {}
     }
 };
 
