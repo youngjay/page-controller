@@ -1,6 +1,6 @@
 {
   "name": "page-controller",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

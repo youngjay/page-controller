@@ -11,10 +11,13 @@ var parseFragment = function(str) {
 };
 
 module.exports = mixin(
-    function() {
+    function(el) {
         this._modules = {};
         this._activeModules = {};
         this._rootModule = new (require(this.modulePathPrefix + this.moduleRootPath))();
+        if (el) {
+            this.render(el);
+        }
     },
     {
         modulePathPrefix: 'module/page',
@@ -23,6 +26,7 @@ module.exports = mixin(
 
         MODULE_ACTIVE: '__active',
         MODULE_VIEW: '__view',
+        PAGE_CLASS: 'page',
 
         update: function(fragment) {
             var data = parseFragment(fragment);
@@ -98,7 +102,7 @@ module.exports = mixin(
         },
 
         onBuildModuleVisibleView: function(str) {  
-            return '<div class="page" data-bind="visible: ' + this.MODULE_ACTIVE + '">' + str+ '</div>';
+            return '<div class="' + this.PAGE_CLASS + '" data-bind="visible: ' + this.MODULE_ACTIVE + '">' + str+ '</div>';
         },
 
         onModuleMissing: function(path) {
