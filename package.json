@@ -1,6 +1,6 @@
 {
   "name": "page-controller",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,5 +20,9 @@
     "mixin-class": "^1.0.3",
     "knockout-commonjs": "0.0.1",
     "path-to-regexp": "^0.1.2"
-  }
+  },
+  "readme": "ERROR: No README data found!",
+  "_id": "page-controller@0.2.8",
+  "_shasum": "638cc1d3698a01181c490bb0f497176cba57a81f",
+  "_from": "page-controller@^0.2.5"
 }

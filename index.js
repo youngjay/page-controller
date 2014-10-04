@@ -19,7 +19,9 @@ module.exports = mixin(
     function(el) {
         this._modules = {};
         this._activeModules = {};
-        this._rootModule = new (require(this.modulePathPrefix + this.moduleRootPath))();
+        this.MODULE_CHILDREN_VIEW_REPLACEMENT = '<!-- ko template: { foreach: ' + this.MODULE_CHILDREN + ', name: function(child) { return child.' + this.MODULE_VIEW + ' }} --><!-- /ko -->';
+
+        this._rootModule = this.loadRootModule();
         if (el) {
             this.render(el);
         }
@@ -29,6 +31,8 @@ module.exports = mixin(
         moduleRootPath: '/root',
         moduleNotFoundPath: '/not-found',
 
+        MODULE_CHILDREN_VIEW_PLACEHOLDER: '{{children}}',
+        MODULE_CHILDREN: '__children',
         MODULE_ACTIVE: '__active',
         MODULE_VIEW: '__view',
         PAGE_CLASS: 'page',
@@ -44,7 +48,7 @@ module.exports = mixin(
             var query = data.query;
             var self = this;
 
-            var parentPath = this.modulePathPrefix;
+            var parentPath = '';
             var parentModule = this._rootModule;
 
             if (this._rootModule.update) {
@@ -56,9 +60,9 @@ module.exports = mixin(
 
                 var currentModule = self._modules[fullPath];
                 if (!currentModule) {
-                    currentModule = self.createModule(fullPath);                       
+                    currentModule = self.loadModule(fullPath);                       
                     self._modules[fullPath] = currentModule;
-                    self.onAppendModuleToParent(parentModule, currentModule);
+                    parentModule[self.MODULE_CHILDREN].push(currentModule);
                 }
             
                 var lastActiveModule = self._activeModules[parentPath];
@@ -81,7 +85,13 @@ module.exports = mixin(
             });
         },
 
-        createModule: function(path) {
+        loadRootModule: function() {
+            return this.loadModule(this.moduleRootPath);
+        },
+
+        loadModule: function(path) {
+            path = this.modulePathPrefix + path;
+
             var CurrentModuleFactory;
 
             try {
@@ -90,7 +100,7 @@ module.exports = mixin(
             catch (e) {
                 // not found
                 if (e.message.indexOf('\'' + path + '\'') !== -1) {
-                    CurrentModuleFactory = this.onModuleMissing(path);
+                    CurrentModuleFactory = this.loadMissingModule(path);
                 }
                 else {
                     // pass other case
@@ -98,24 +108,25 @@ module.exports = mixin(
                 }
             }
 
-            var currentModule = typeof CurrentModuleFactory === 'function' ? new CurrentModuleFactory() : CurrentModuleFactory;    
+            return this.buildModule(CurrentModuleFactory);
+        },
 
+        buildModule: function(CurrentModuleFactory) {
+            var currentModule = typeof CurrentModuleFactory === 'function' ? new CurrentModuleFactory() : CurrentModuleFactory;
+
+            currentModule[this.MODULE_CHILDREN] = ko.observableArray();
             currentModule[this.MODULE_ACTIVE] = ko.observable(true);
-            currentModule[this.MODULE_VIEW] = this.onBuildModuleVisibleView(currentModule[this.MODULE_VIEW]);
+            currentModule[this.MODULE_VIEW] = this.buildModuleView(currentModule[this.MODULE_VIEW]);
 
             return currentModule;
         },
 
-        onBuildModuleVisibleView: function(str) {  
-            return '<div class="' + this.PAGE_CLASS + '" data-bind="visible: ' + this.MODULE_ACTIVE + '">' + str+ '</div>';
+        buildModuleView: function(str) {
+            return '<!-- ko if: ' + this.MODULE_ACTIVE + ' -->' + str.replace(this.MODULE_CHILDREN_VIEW_PLACEHOLDER, this.MODULE_CHILDREN_VIEW_REPLACEMENT) + '<!-- /ko -->';
         },
 
-        onModuleMissing: function(path) {
+        loadMissingModule: function(path) {
             return require(this.modulePathPrefix + this.moduleNotFoundPath);
-        },
-
-        onAppendModuleToParent: function(parent, child) {
-            parent.add(child);
         },
 
         // 重写此方法可以用作重定向，或者过滤父路径
