@@ -35,7 +35,6 @@ module.exports = mixin(
         MODULE_CHILDREN: '__children',
         MODULE_ACTIVE: '__active',
         MODULE_VIEW: '__view',
-        PAGE_CLASS: 'page',
 
         update: function(fragment) {
             var data = parseFragment(fragment);
@@ -44,18 +43,15 @@ module.exports = mixin(
                 return;
             }
 
-            var path = data.path;
-            var query = data.query;
+            this.data = data;
             var self = this;
 
             var parentPath = '';
             var parentModule = this._rootModule;
 
-            if (this._rootModule.update) {
-                this._rootModule.update(query, path);
-            }
+            this.updateModule(this._rootModule);
 
-            path.split('/').filter(Boolean).forEach(function(subPath) {
+            data.path.split('/').filter(Boolean).forEach(function(subPath) {
                 var fullPath = parentPath + '/' + subPath;
 
                 var currentModule = self._modules[fullPath];
@@ -75,9 +71,7 @@ module.exports = mixin(
                     self._activeModules[parentPath] = currentModule;
                 }
 
-                if (currentModule.update) {
-                    currentModule.update(query, path);
-                }
+                self.updateModule(currentModule);
 
                 // for next iteration
                 parentPath = fullPath;
@@ -87,6 +81,13 @@ module.exports = mixin(
 
         loadRootModule: function() {
             return this.loadModule(this.moduleRootPath);
+        },
+
+        loadMissingModule: function(path) {
+            if (path === this.moduleNotFoundPath) {
+                throw new Error('moduleNotFoundPath:' + this.moduleNotFoundPath + ' not exists');
+            }
+            return this.loadModule(this.moduleNotFoundPath);
         },
 
         loadModule: function(path) {
@@ -111,6 +112,12 @@ module.exports = mixin(
             return this.buildModule(CurrentModuleFactory);
         },
 
+        updateModule: function(module) {
+            if (module.update) {
+                module.update(this.data.query, this.data.path);
+            }
+        },
+
         buildModule: function(CurrentModuleFactory) {
             var currentModule = typeof CurrentModuleFactory === 'function' ? new CurrentModuleFactory() : CurrentModuleFactory;
 
@@ -123,10 +130,6 @@ module.exports = mixin(
 
         buildModuleView: function(str) {
             return '<!-- ko if: ' + this.MODULE_ACTIVE + ' -->' + str.replace(this.MODULE_CHILDREN_VIEW_PLACEHOLDER, this.MODULE_CHILDREN_VIEW_REPLACEMENT) + '<!-- /ko -->';
-        },
-
-        loadMissingModule: function(path) {
-            return require(this.modulePathPrefix + this.moduleNotFoundPath);
         },
 
         // 重写此方法可以用作重定向，或者过滤父路径
